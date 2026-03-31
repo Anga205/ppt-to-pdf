@@ -1,23 +1,18 @@
 # PPT/PPTX to PDF API
 
-Simple FastAPI service that converts PowerPoint files to PDF.
-
-The API is designed for caller simplicity:
-
+A HTTP service that converts PowerPoint files to PDF, the concept is very simple:
 - One main endpoint: `POST /convert`
-- Upload one file and receive one PDF
-- No platform-specific API behavior
-- Built-in retry and repair flow for damaged files
-
-## Why This API Is Easy to Integrate
-
-- No JSON payload required, only multipart file upload
 - Accepts `.pptx` and `.ppt`
 - Returns `application/pdf` directly
-- Includes health endpoint (`GET /health`) and root info (`GET /`)
-- Works with Swagger at `/docs`
+- Upload one file and receive one PDF
 
-## Robust Handling for Broken Files
+It even works with broken pptx files or ppt files that were made in very old and possibly outdated versions of powerpoint (like the ones on [pesuacademy](pesuacademy.com))
+
+
+<details>
+<summary>Click here to read about how the API     handles broken files</summary>
+
+---
 
 When conversion fails, the service does not fail immediately.
 
@@ -32,32 +27,8 @@ It retries conversion using multiple repair methods before returning an error:
 
 If all attempts fail, the API returns `500` with `"Conversion failed"`.
 
-## Quick Start
-
-### 1) Install system dependency
-
-Install LibreOffice and make sure `soffice` or `libreoffice` is available in your PATH.
-
-Ubuntu or Debian:
-
-```bash
-sudo apt update
-sudo apt install -y libreoffice
-```
-
-### 2) Install Python dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 3) Run the API
-
-```bash
-python3 main.py
-```
-
-Default URL: `http://127.0.0.1:8000`
+---
+</details>
 
 ## Endpoints
 
@@ -197,39 +168,12 @@ $form = @{ file = Get-Item ".\slides.pptx" }
 Invoke-WebRequest -Uri $uri -Method Post -Form $form -OutFile "slides.pdf"
 ```
 
-## Using Swagger UI
 
-1. Start the API with `python3 main.py`
-2. Open `http://127.0.0.1:8000/docs`
-3. Expand `POST /convert`
-4. Click Try it out
-5. Select `.pptx` or `.ppt` file and execute
-6. Save returned PDF
+### cURL / bash
 
-## Runtime Configuration
-
-You can configure the server with environment variables:
-
-- `API_HOST` (default: `0.0.0.0`)
-- `API_PORT` (default: `8000`)
-- `API_RELOAD` (`true` or `false`, default: `false`)
-
-Example:
 
 ```bash
-API_HOST=127.0.0.1 API_PORT=9000 API_RELOAD=true python3 main.py
+curl -X POST "http://127.0.0.1:8000/convert" \
+  -F "file=@./slides.pptx" \
+  --output slides-from-container.pdf
 ```
-
-## Error Handling
-
-- `400` when upload is missing or extension is unsupported
-- `500` when conversion fails even after all conversion and repair attempts
-
-## Project Structure
-
-- `main.py`: uvicorn launcher
-- `app/api.py`: endpoint and request handling
-- `app/services/conversion_service.py`: conversion orchestration
-- `app/services/libreoffice_converter.py`: conversion strategies
-- `app/services/repair_utils.py`: repair strategies
-- `app/utils/`: command and file helpers
