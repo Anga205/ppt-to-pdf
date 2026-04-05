@@ -20,6 +20,10 @@ def _frontend_path():
     return Path(__file__).resolve().parent / "static" / "index.html"
 
 
+def _logo_path():
+    return Path(__file__).resolve().parent / "static" / "anga.svg"
+
+
 def _validate_extension(filename):
     extension = Path(filename).suffix.lower()
     if extension not in ALLOWED_EXTENSIONS:
@@ -59,6 +63,11 @@ def _convert_upload_to_pdf_bytes(upload_stream, extension):
 @app.get("/")
 def root():
     return FileResponse(_frontend_path(), media_type="text/html")
+
+
+@app.get("/anga.svg")
+def logo():
+    return FileResponse(_logo_path(), media_type="image/svg+xml")
 
 
 @app.post("/convert")
