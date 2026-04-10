@@ -6,7 +6,7 @@ A HTTP service that converts PowerPoint files to PDF, the concept is very simple
 - Returns `application/pdf` directly
 - Upload one file and receive one PDF
 
-It even works with broken pptx files or ppt files that were made in very old and possibly outdated versions of powerpoint (like the ones on [pesuacademy](pesuacademy.com))
+It even works with broken pptx files or ppt files that were made in very old and possibly outdated versions of powerpoint (like the ones on [pesuacademy](https://pesuacademy.com))
 
 
 <details>
@@ -50,36 +50,27 @@ It also links to:
 
 ## Sample Requests
 
-### cURL examples
+### cURL / Bash examples
 
-<details>
-<summary>click to view sample curl command</summary>
 
 ```bash
-curl -X POST "http://127.0.0.1:8000/convert" \
+curl -X POST "https://ppt2pdf.anga.codes/convert" \
   -F "file=@./slides.pptx" \
   --output slides.pdf
 ```
 
-</details>
-
-<details>
-<summary>click to view sample curl command</summary>
-
 ```bash
-curl -X POST "http://127.0.0.1:8000/convert" \
+curl -X POST "https://ppt2pdf.anga.codes/convert" \
   -F "upload=@./legacy.ppt" \
   --output legacy.pdf
 ```
-
-</details>
 
 ### Python (requests)
 
 ```python
 import requests
 
-url = "http://127.0.0.1:8000/convert"
+url = "https://ppt2pdf.anga.codes/convert"
 with open("slides.pptx", "rb") as f:
     response = requests.post(url, files={"file": f}, timeout=300)
 
@@ -93,7 +84,7 @@ with open("slides.pdf", "wb") as out:
 ```python
 import httpx
 
-url = "http://127.0.0.1:8000/convert"
+url = "https://ppt2pdf.anga.codes/convert"
 with open("slides.ppt", "rb") as f:
     files = {"file": ("slides.ppt", f, "application/vnd.ms-powerpoint")}
     resp = httpx.post(url, files=files, timeout=300)
@@ -113,7 +104,7 @@ import fetch from "node-fetch";
 const form = new FormData();
 form.append("file", fs.createReadStream("slides.pptx"));
 
-const response = await fetch("http://127.0.0.1:8000/convert", {
+const response = await fetch("https://ppt2pdf.anga.codes/convert", {
   method: "POST",
   body: form,
   headers: form.getHeaders(),
@@ -133,7 +124,7 @@ fs.writeFileSync("slides.pdf", Buffer.from(arrayBuffer));
 const formData = new FormData();
 formData.append("file", fileInput.files[0]);
 
-const response = await fetch("http://127.0.0.1:8000/convert", {
+const response = await fetch("https://ppt2pdf.anga.codes/convert", {
   method: "POST",
   body: formData,
 });
@@ -155,17 +146,7 @@ URL.revokeObjectURL(url);
 ### PowerShell
 
 ```powershell
-$uri = "http://127.0.0.1:8000/convert"
+$uri = "https://ppt2pdf.anga.codes/convert"
 $form = @{ file = Get-Item ".\slides.pptx" }
 Invoke-WebRequest -Uri $uri -Method Post -Form $form -OutFile "slides.pdf"
-```
-
-
-### cURL / bash
-
-
-```bash
-curl -X POST "http://127.0.0.1:8000/convert" \
-  -F "file=@./slides.pptx" \
-  --output slides-from-container.pdf
 ```

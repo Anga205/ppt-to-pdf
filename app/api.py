@@ -4,7 +4,9 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
+
 from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.constants import ALLOWED_EXTENSIONS
 from app.logging_config import configure_logging
@@ -13,7 +15,17 @@ from app.utils.file_ops import copy_stream_to_path, file_has_content, read_file_
 
 
 configure_logging()
+
 app = FastAPI(title="PPT/PPTX to PDF Converter")
+
+# Enable CORS for all origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def _frontend_path():
