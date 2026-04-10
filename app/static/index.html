@@ -20,6 +20,12 @@
       --err: #c98585;
       --topbar-bg: #000000;
       --topbar-border: #1e1e1e;
+      --topbar-fg: #f6f6f6;
+      --topbar-sub: #a3a3a3;
+      --topbar-btn-bg: #1f1f1f;
+      --topbar-btn-hover: #2a2a2a;
+      --topbar-btn-border: #3a3a3a;
+      --progress-fill: #8d8d8d;
     }
 
     body.theme-light {
@@ -33,6 +39,14 @@
       --btn-hover: #d6d6d6;
       --ok: #1f6a1f;
       --err: #8f2d2d;
+      --topbar-bg: #ececec;
+      --topbar-border: #bcbcbc;
+      --topbar-fg: #141414;
+      --topbar-sub: #5f5f5f;
+      --topbar-btn-bg: #ffffff;
+      --topbar-btn-hover: #ececec;
+      --topbar-btn-border: #b8b8b8;
+      --progress-fill: #676767;
     }
 
     * {
@@ -42,6 +56,9 @@
 
     body {
       margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
       background: var(--bg);
       color: var(--fg);
       line-height: 1.45;
@@ -55,7 +72,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
+      gap: 12px;
     }
 
     .brand {
@@ -78,39 +95,88 @@
       transform: rotate(360deg) scale(1.08);
     }
 
+    .brand-text {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      min-width: 0;
+    }
+
     .brand-main {
-      color: #ffffff;
+      color: var(--topbar-fg);
       font-size: 2rem;
       font-weight: 800;
-      line-height: 1;
+      line-height: 0.95;
       margin: 0;
-    }
-
-    .brand-sub {
-      color: #a3a3a3;
-      font-size: 1rem;
-      line-height: 1.1;
-      margin: 2px 0 0;
-      font-weight: 500;
-    }
-
-    .theme-toggle {
-      border: 1px solid #3a3a3a;
-      background: #1f1f1f;
-      color: #f1f1f1;
-      padding: 9px 12px;
-      cursor: pointer;
-      flex: 0 0 auto;
       white-space: nowrap;
     }
 
+    .brand-sub-stack {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin-bottom: 2px;
+    }
+
+    .brand-sub {
+      color: var(--topbar-sub);
+      font-size: 1rem;
+      line-height: 1.05;
+      margin: 0;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .theme-toggle {
+      border: 1px solid var(--topbar-btn-border);
+      background: var(--topbar-btn-bg);
+      color: var(--topbar-fg);
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      cursor: pointer;
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .theme-toggle:hover {
-      background: #2a2a2a;
+      background: var(--topbar-btn-hover);
+    }
+
+    .theme-toggle svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .theme-toggle .icon-moon {
+      display: none;
+    }
+
+    body.theme-light .theme-toggle .icon-sun {
+      display: none;
+    }
+
+    body.theme-light .theme-toggle .icon-moon {
+      display: block;
+    }
+
+    .page-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 18px;
     }
 
     .container {
-      max-width: 820px;
-      margin: 18px auto;
+      width: min(820px, 100%);
       padding: 18px;
       border: 1px solid var(--border);
       background: var(--panel);
@@ -203,6 +269,54 @@
       cursor: not-allowed;
     }
 
+    .progress-panel {
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 10px;
+    }
+
+    .progress-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--fg);
+      font-size: 0.92rem;
+    }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--fg);
+      animation: spin 0.8s linear infinite;
+      flex: 0 0 auto;
+    }
+
+    .progress-track {
+      margin-top: 8px;
+      border: 1px solid var(--border);
+      background: #111111;
+      height: 8px;
+    }
+
+    body.theme-light .progress-track {
+      background: #d7d7d7;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--progress-fill);
+      transition: width 0.2s ease;
+    }
+
+    .progress-meta {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
     .links {
       display: flex;
       gap: 14px;
@@ -269,6 +383,12 @@
       color: var(--err);
     }
 
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
     @media (max-width: 768px) {
       .topbar {
         padding: 10px;
@@ -277,6 +397,10 @@
       .logo {
         width: 38px;
         height: 38px;
+      }
+
+      .brand-text {
+        gap: 8px;
       }
 
       .brand-main {
@@ -288,14 +412,19 @@
       }
 
       .theme-toggle {
-        padding: 8px 9px;
+        width: 36px;
+        height: 36px;
+      }
+
+      .page-content {
+        padding: 0;
+        align-items: stretch;
       }
 
       .container {
-        margin: 0;
-        min-height: calc(100vh - 62px);
         border-left: none;
         border-right: none;
+        border-bottom: none;
       }
 
       .row {
@@ -315,58 +444,95 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">
+    <div class="brand" style="height: 100%; text-align: center; justify-content: center; align-items: center;">
       <img class="logo" src="/anga.svg" alt="Anga logo">
-      <div>
-        <div class="brand-main">Anga's</div>
-        <div class="brand-sub">PPT-to-PDF</div>
-        <div class="brand-sub">converter</div>
+      <div class="brand-text" style="height: 100%; text-align: center; justify-content: center; align-items: center;">
+        <div class="brand-main" style="height: 100%; text-align: center; justify-content: center; align-items: center;">Anga's</div>
+        <div class="brand-sub-stack">
+          <div class="brand-sub">PPT-to-PDF</div>
+          <div class="brand-sub">converter</div>
+        </div>
       </div>
     </div>
-    <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false">Light theme</button>
+    <button
+      id="theme-toggle"
+      class="theme-toggle"
+      type="button"
+      aria-pressed="false"
+      aria-label="Switch to light theme"
+      title="Toggle theme"
+    >
+      <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v3"></path>
+        <path d="M12 19v3"></path>
+        <path d="M2 12h3"></path>
+        <path d="M19 12h3"></path>
+        <path d="M4.9 4.9l2.1 2.1"></path>
+        <path d="M17 17l2.1 2.1"></path>
+        <path d="M4.9 19.1L7 17"></path>
+        <path d="M17 7l2.1-2.1"></path>
+      </svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 1 0 9.8 9.8z"></path>
+      </svg>
+    </button>
   </header>
 
-  <main class="container">
-    <h1>PPT to PDF API Wrapper</h1>
-    <p>
-      This page is only a wrapper around the main API endpoint at /convert.
-      It sends one request per selected file and downloads each returned PDF.
-    </p>
-    <p>Accepted input files: .pptx, .ppt, .pdf</p>
+  <div class="page-content">
+    <main class="container">
+      <h1>PPT to PDF API Wrapper</h1>
+      <p>
+        This page is only a wrapper around the main API endpoint at /convert.
+        It sends one request per selected file and downloads each returned PDF.
+      </p>
+      <p>Accepted input files: .pptx, .ppt, .pdf</p>
 
-    <form id="convert-form">
-      <div class="field">
-        <label for="file">Choose one or more files</label>
-        <input id="file" type="file" name="file" accept=".pptx,.ppt,.pdf" multiple required>
+      <form id="convert-form">
+        <div class="field">
+          <label for="file">Choose one or more files</label>
+          <input id="file" type="file" name="file" accept=".pptx,.ppt,.pdf" multiple required>
+        </div>
+        <p class="mode-note" id="mode-note"></p>
+        <div class="row">
+          <button id="submit" type="submit">Upload and Convert</button>
+        </div>
+      </form>
+
+      <div id="progress-panel" class="progress-panel" hidden>
+        <div class="progress-head">
+          <span id="spinner" class="spinner" aria-hidden="true"></span>
+          <span id="progress-text">Starting...</span>
+        </div>
+        <div class="progress-track">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <div id="progress-meta" class="progress-meta"></div>
       </div>
-      <p class="mode-note" id="mode-note"></p>
-      <div class="row">
-        <button id="submit" type="submit">Upload and Convert</button>
+
+      <div id="status">Select file(s) to begin.</div>
+
+      <div class="results" id="results" hidden>
+        <table>
+          <thead>
+            <tr>
+              <th>File</th>
+              <th class="col-status">Status</th>
+              <th>Message</th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
       </div>
-    </form>
 
-    <div id="status">Select file(s) to begin.</div>
+      <div class="meta" id="summary"></div>
 
-    <div class="results" id="results" hidden>
-      <table>
-        <thead>
-          <tr>
-            <th>File</th>
-            <th class="col-status">Status</th>
-            <th>Message</th>
-          </tr>
-        </thead>
-        <tbody id="results-body"></tbody>
-      </table>
-    </div>
-
-    <div class="meta" id="summary"></div>
-
-    <div class="links">
-      <a href="/docs" target="_blank" rel="noopener noreferrer">Open Swagger UI Docs</a>
-      <a href="https://github.com/Anga205/ppt-to-pdf-api" target="_blank" rel="noopener noreferrer">Open GitHub Repository</a>
-    </div>
-  </main>
+      <div class="links">
+        <a href="/docs" target="_blank" rel="noopener noreferrer">Open Swagger UI Docs</a>
+        <a href="https://github.com/Anga205/ppt-to-pdf-api" target="_blank" rel="noopener noreferrer">Open GitHub Repository</a>
+      </div>
+    </main>
+  </div>
 
   <script>
     (function () {
@@ -379,6 +545,11 @@
       const summary = document.getElementById("summary");
       const modeNote = document.getElementById("mode-note");
       const themeToggle = document.getElementById("theme-toggle");
+      const progressPanel = document.getElementById("progress-panel");
+      const progressText = document.getElementById("progress-text");
+      const progressMeta = document.getElementById("progress-meta");
+      const progressFill = document.getElementById("progress-fill");
+      const spinner = document.getElementById("spinner");
       const mobileQuery = window.matchMedia("(max-width: 768px)");
       const coarsePointerQuery = window.matchMedia("(pointer: coarse)");
 
@@ -459,22 +630,56 @@
         return await response.blob();
       }
 
+      function resetProgress(total) {
+        progressPanel.hidden = false;
+        progressFill.style.width = "0%";
+        progressText.textContent = "Preparing uploads...";
+        progressMeta.textContent = "0 of " + total + " files processed.";
+        spinner.style.display = "inline-block";
+      }
+
+      function updateProgress(index, total, filename, state) {
+        const percent = Math.floor((index / total) * 100);
+        progressFill.style.width = String(percent) + "%";
+        progressText.textContent = state;
+        progressMeta.textContent =
+          "File " + index + " of " + total + ": " + filename;
+      }
+
+      function completeProgress(total, okCount, errCount) {
+        progressFill.style.width = "100%";
+        progressText.textContent = "Conversion run complete.";
+        progressMeta.textContent =
+          "Processed " + total + " files. Success: " + okCount + ", Failed: " + errCount + ".";
+        spinner.style.display = "none";
+      }
+
       async function convertFiles(files) {
         let okCount = 0;
         let errCount = 0;
+        const total = files.length;
 
-        for (const file of files) {
+        resetProgress(total);
+        for (let i = 0; i < total; i += 1) {
+          const file = files[i];
+          const index = i + 1;
+          updateProgress(index, total, file.name, "Uploading and converting...");
+
           try {
             const blob = await submitFile(file);
             saveBlob(blob, outputName(file.name || "converted.pdf"));
             addResultRow(file.name, "Success", "Converted and downloaded.", false);
+            updateProgress(index, total, file.name, "Done");
             okCount += 1;
           } catch (error) {
-            addResultRow(file.name, "Failed", String(error.message || error), true);
+            const message = String(error.message || error);
+            addResultRow(file.name, "Failed", message, true);
+            updateProgress(index, total, file.name, "Failed");
             errCount += 1;
           }
         }
 
+        completeProgress(total, okCount, errCount);
         return { okCount, errCount };
       }
 
@@ -523,7 +728,8 @@
       function toggleTheme() {
         document.body.classList.toggle("theme-light");
         const isLight = document.body.classList.contains("theme-light");
-        themeToggle.textContent = isLight ? "Dark theme" : "Light theme";
+        const ariaLabel = isLight ? "Switch to dark theme" : "Switch to light theme";
+        themeToggle.setAttribute("aria-label", ariaLabel);
         themeToggle.setAttribute("aria-pressed", String(isLight));
       }
 
