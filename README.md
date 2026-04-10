@@ -2,7 +2,7 @@
 
 A HTTP service that converts PowerPoint files to PDF, the concept is very simple:
 - One main endpoint: `POST /convert`
-- Accepts `.pptx` and `.ppt`
+- Accepts `.pptx`, `.ppt`, and `.pdf` (PDF passthrough)
 - Returns `application/pdf` directly
 - Upload one file and receive one PDF
 
@@ -10,7 +10,7 @@ It even works with broken pptx files or ppt files that were made in very old and
 
 
 <details>
-<summary>Click here to read about how the API     handles broken files</summary>
+<summary>Click here to read about how the API handles broken files</summary>
 
 ---
 
@@ -34,26 +34,18 @@ If all attempts fail, the API returns `500` with `"Conversion failed"`.
 
 ### GET /
 
-Returns basic API metadata:
+Returns an HTML wrapper page that uploads files and calls `POST /convert`.
+The page clearly indicates it is only a wrapper around the main API.
+It also links to:
 
-- service message
-- conversion endpoint path
-- form field name
-- docs path
-
-### GET /health
-
-Returns:
-
-```json
-{"status":"ok"}
-```
+- Swagger UI docs (`/docs`)
+- GitHub repository
 
 ### POST /convert
 
 - Request content type: `multipart/form-data`
 - Accepted field names: `file` (primary), `upload` (alias)
-- Accepted file extensions: `.pptx`, `.ppt`
+- Accepted file extensions: `.pptx`, `.ppt`, `.pdf`
 - Response content type: `application/pdf`
 
 ## Sample Requests

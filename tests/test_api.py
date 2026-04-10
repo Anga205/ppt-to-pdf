@@ -27,13 +27,14 @@ def _fake_convert_file(_input_path, output_path):
 def test_root_endpoint():
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json()["endpoint"] == "POST /convert"
+    assert response.headers["content-type"].startswith("text/html")
+    assert "PPT to PDF API Wrapper" in response.text
+    assert "Open Swagger UI Docs" in response.text
 
 
-def test_health_endpoint():
+def test_health_removed():
     response = client.get("/health")
-    assert response.status_code == 200
-    assert response.json()["status"] == "ok"
+    assert response.status_code == 404
 
 
 def test_convert_success_with_file_field(monkeypatch):
@@ -70,7 +71,15 @@ def test_convert_rejects_invalid_extension():
     files = {"file": ("notes.txt", b"not a ppt", "text/plain")}
     response = client.post("/convert", files=files)
     assert response.status_code == 400
-    assert response.json()["detail"] == "Only .ppt and .pptx files are supported"
+    assert response.json()["detail"] == "Only .ppt, .pptx, and .pdf files are supported"
+
+
+def test_convert_pdf_passthrough():
+    files = {"file": ("already.pdf", b"%PDF-1.4\nfake\n%%EOF\n", "application/pdf")}
+    response = client.post("/convert", files=files)
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/pdf")
+    assert response.content.startswith(b"%PDF")
 
 
 def test_convert_missing_upload_returns_400():

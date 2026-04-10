@@ -1,7 +1,7 @@
 ZIP_HEADER = b"PK\x03\x04"
 OLE_HEADER = b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"
 
-ALLOWED_EXTENSIONS = {".ppt", ".pptx"}
+ALLOWED_EXTENSIONS = {".ppt", ".pptx", ".pdf"}
 JUNK_BASENAMES = {".DS_Store", "Thumbs.db", "desktop.ini"}
 
 LIBREOFFICE_CANDIDATES = ("soffice", "libreoffice")

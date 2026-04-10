@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PPT to PDF API Wrapper</title>
+  <style>
+    :root {
+      --bg: #151515;
+      --panel: #202020;
+      --surface: #1a1a1a;
+      --fg: #e4e4e4;
+      --muted: #b2b2b2;
+      --border: #3a3a3a;
+      --btn: #2d2d2d;
+      --btn-hover: #383838;
+      --file-btn: #b31b1b;
+      --file-btn-hover: #8f1515;
+      --ok: #8bb88b;
+      --err: #ce8a8a;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.45;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 24px auto;
+      padding: 20px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      margin: 0 0 10px;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0 0 10px;
+      color: var(--muted);
+    }
+
+    .field {
+      margin-top: 14px;
+    }
+
+    label {
+      display: inline-block;
+      margin-bottom: 6px;
+      color: var(--fg);
+      font-size: 0.95rem;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      background: var(--surface);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      padding: 8px;
+    }
+
+    input[type="file"]::file-selector-button {
+      border: 1px solid #6f1111;
+      background: var(--file-btn);
+      color: #ffffff;
+      padding: 7px 12px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      background: var(--file-btn-hover);
+    }
+
+    input[type="file"]::-webkit-file-upload-button {
+      border: 1px solid #6f1111;
+      background: var(--file-btn);
+      color: #ffffff;
+      padding: 7px 12px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+
+    input[type="file"]::-webkit-file-upload-button:hover {
+      background: var(--file-btn-hover);
+    }
+
+    button {
+      border: 1px solid var(--border);
+      background: var(--btn);
+      color: var(--fg);
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: var(--btn-hover);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .links {
+      display: flex;
+      gap: 14px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    a {
+      color: var(--fg);
+      text-decoration: underline;
+    }
+
+    #status {
+      margin-top: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      min-height: 42px;
+      padding: 10px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .results {
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 520px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.92rem;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .col-status {
+      width: 120px;
+    }
+
+    .meta {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .ok {
+      color: var(--ok);
+    }
+
+    .err {
+      color: var(--err);
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        margin: 0;
+        min-height: 100vh;
+        border-left: none;
+        border-right: none;
+      }
+
+      .row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      table {
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>PPT to PDF API Wrapper</h1>
+    <p>
+      This page is only a wrapper around the main API endpoint at /convert.
+      It sends one request per selected file and downloads each returned PDF.
+    </p>
+    <p>Accepted input files: .pptx, .ppt, .pdf</p>
+
+    <form id="convert-form">
+      <div class="field">
+        <label for="file">Choose one or more files</label>
+        <input id="file" type="file" name="file" accept=".pptx,.ppt,.pdf" multiple required>
+      </div>
+      <div class="row">
+        <button id="submit" type="submit">Convert Selected Files</button>
+      </div>
+    </form>
+
+    <div id="status">Select one or more files and click Convert Selected Files.</div>
+
+    <div class="results" id="results" hidden>
+      <table>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th class="col-status">Status</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody id="results-body"></tbody>
+      </table>
+    </div>
+
+    <div class="meta" id="summary"></div>
+
+    <div class="links">
+      <a href="/docs" target="_blank" rel="noopener noreferrer">Open Swagger UI Docs</a>
+      <a href="https://github.com/Anga205/ppt-to-pdf-api" target="_blank" rel="noopener noreferrer">Open GitHub Repository</a>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const form = document.getElementById("convert-form");
+      const fileInput = document.getElementById("file");
+      const submitBtn = document.getElementById("submit");
+      const status = document.getElementById("status");
+      const results = document.getElementById("results");
+      const resultsBody = document.getElementById("results-body");
+      const summary = document.getElementById("summary");
+
+      function setStatus(message, type) {
+        status.textContent = message;
+        status.classList.remove("ok", "err");
+        if (type) {
+          status.classList.add(type);
+        }
+      }
+
+      function outputName(name) {
+        const base = name.replace(/\.[^/.]+$/, "");
+        return base + ".pdf";
+      }
+
+      function clearResults() {
+        resultsBody.innerHTML = "";
+        summary.textContent = "";
+        results.hidden = true;
+      }
+
+      function addResultRow(filename, state, message, isError) {
+        const row = document.createElement("tr");
+        const fileCell = document.createElement("td");
+        const stateCell = document.createElement("td");
+        const messageCell = document.createElement("td");
+
+        fileCell.textContent = filename;
+        stateCell.className = "col-status " + (isError ? "err" : "ok");
+        stateCell.textContent = state;
+        messageCell.textContent = message;
+
+        row.appendChild(fileCell);
+        row.appendChild(stateCell);
+        row.appendChild(messageCell);
+        resultsBody.appendChild(row);
+        results.hidden = false;
+      }
+
+      function saveBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+
+      async function submitFile(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch("/convert", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) {
+          let detail = "Conversion failed";
+          try {
+            const data = await response.json();
+            detail = data.detail || detail;
+          } catch (_) {
+            detail = await response.text();
+          }
+          throw new Error(detail);
+        }
+
+        return await response.blob();
+      }
+
+      async function convertFiles(files) {
+        let okCount = 0;
+        let errCount = 0;
+
+        for (const file of files) {
+          try {
+            const blob = await submitFile(file);
+            saveBlob(blob, outputName(file.name || "converted.pdf"));
+            addResultRow(file.name, "Success", "Converted and downloaded.", false);
+            okCount += 1;
+          } catch (error) {
+            addResultRow(file.name, "Failed", String(error.message || error), true);
+            errCount += 1;
+          }
+        }
+
+        return { okCount, errCount };
+      }
+
+      form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        const files = Array.from(fileInput.files || []);
+        if (files.length === 0) {
+          setStatus("Choose at least one file.", "err");
+          return;
+        }
+
+        submitBtn.disabled = true;
+        clearResults();
+        setStatus("Sending one request per file to /convert...", "");
+
+        try {
+          const report = await convertFiles(files);
+          summary.textContent =
+            "Completed " + files.length + " request(s). Success: " +
+            report.okCount + ", Failed: " + report.errCount + ".";
+          if (report.errCount > 0) {
+            setStatus("Completed with some failures. Check results below.", "err");
+          } else {
+            setStatus("All files converted successfully.", "ok");
+          }
+        } catch (error) {
+          setStatus("Error: " + String(error.message || error), "err");
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

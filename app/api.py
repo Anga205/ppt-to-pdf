@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 
 from app.constants import ALLOWED_EXTENSIONS
 from app.logging_config import configure_logging
@@ -16,10 +16,14 @@ configure_logging()
 app = FastAPI(title="PPT/PPTX to PDF Converter")
 
 
+def _frontend_path():
+    return Path(__file__).resolve().parent / "static" / "index.html"
+
+
 def _validate_extension(filename):
     extension = Path(filename).suffix.lower()
     if extension not in ALLOWED_EXTENSIONS:
-        raise HTTPException(status_code=400, detail="Only .ppt and .pptx files are supported")
+        raise HTTPException(status_code=400, detail="Only .ppt, .pptx, and .pdf files are supported")
     return extension
 
 
@@ -44,6 +48,8 @@ def _convert_upload_to_pdf_bytes(upload_stream, extension):
         input_path = temp_dir / f"input{extension}"
         output_path = temp_dir / "output.pdf"
         copy_stream_to_path(upload_stream, input_path)
+        if extension == ".pdf":
+            return read_file_bytes(input_path)
         convert_file(input_path, output_path)
         if not file_has_content(output_path):
             raise RuntimeError("Conversion failed")
@@ -52,17 +58,7 @@ def _convert_upload_to_pdf_bytes(upload_stream, extension):
 
 @app.get("/")
 def root():
-    return {
-        "message": "PPT/PPTX to PDF API",
-        "endpoint": "POST /convert",
-        "formField": "file",
-        "docs": "/docs",
-    }
-
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+    return FileResponse(_frontend_path(), media_type="text/html")
 
 
 @app.post("/convert")
