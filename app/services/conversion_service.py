@@ -3,6 +3,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
+from app.concurrency import get_limiter
 from app.services.libreoffice_converter import (
     convert_with_libreoffice,
     convert_with_libreoffice_generic_only,
@@ -11,6 +12,20 @@ from app.services.repair_utils import (
     detect_container,
     list_pptx_repair_candidates,
 )
+from app.recovery.pipeline import run_full_recovery
+from app.recovery.report import RecoveryReport
+
+
+def convert_file_robust(input_path: Path, pdf_path: Path) -> Path:
+    """Robust conversion with full recovery pipeline."""
+    report = run_full_recovery(input_path, pdf_path)
+    if report.successful_strategy:
+        logging.info("Recovery succeeded with strategy: %s (engine=%s)", report.successful_strategy, report.engine_used)
+        return pdf_path
+    # If pipeline didn't produce PDF but original direct might have, try direct once more
+    if not pdf_path.exists() or pdf_path.stat().st_size == 0:
+        raise RuntimeError("Conversion failed after full recovery pipeline")
+    return pdf_path
 
 
 def _retry_after_all_pptx_repairs(input_path: Path, pdf_path: Path):
@@ -55,14 +70,26 @@ def _retry_extension_variants(input_path: Path, pdf_path: Path):
 
 
 def convert_file(input_path: Path, pdf_path: Path):
-    logging.info("Starting conversion for %s", input_path)
-    if convert_with_libreoffice(input_path, pdf_path):
-        return pdf_path
-    if _retry_after_all_pptx_repairs(input_path, pdf_path):
-        return pdf_path
-    if _retry_legacy_ole_methods(input_path, pdf_path):
-        return pdf_path
-    if _retry_extension_variants(input_path, pdf_path):
-        return pdf_path
-    logging.error("Conversion failed after all fallback strategies")
-    raise RuntimeError("Conversion failed")
+    # The concurrency limit wraps the ENTIRE conversion/recovery process.
+    # Requests wait for a slot; the slot is always released on exit.
+    with get_limiter().slot():
+        return _convert_file_unlimited(input_path, pdf_path)
+
+
+def _convert_file_unlimited(input_path: Path, pdf_path: Path):
+    # Use robust pipeline that tries direct + all recovery stages
+    try:
+        return convert_file_robust(input_path, pdf_path)
+    except Exception:
+        # Fallback to original direct + repair pipeline for compatibility
+        logging.info("Robust pipeline failed, falling back to original pipeline")
+        if convert_with_libreoffice(input_path, pdf_path):
+            return pdf_path
+        if _retry_after_all_pptx_repairs(input_path, pdf_path):
+            return pdf_path
+        if _retry_legacy_ole_methods(input_path, pdf_path):
+            return pdf_path
+        if _retry_extension_variants(input_path, pdf_path):
+            return pdf_path
+        logging.error("Conversion failed after all fallback strategies")
+        raise RuntimeError("Conversion failed")

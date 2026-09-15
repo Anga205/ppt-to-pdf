@@ -7,6 +7,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.concurrency import run_in_threadpool
 
 from app.constants import ALLOWED_EXTENSIONS
 from app.logging_config import configure_logging
@@ -58,7 +59,7 @@ def _build_response_headers(original_name):
     return {"Content-Disposition": f'attachment; filename="{output_name}"'}
 
 
-def _convert_upload_to_pdf_bytes(upload_stream, extension):
+async def _convert_upload_to_pdf_bytes(upload_stream, extension):
     with tempfile.TemporaryDirectory() as temp_dir_name:
         temp_dir = Path(temp_dir_name)
         input_path = temp_dir / f"input{extension}"
@@ -66,7 +67,9 @@ def _convert_upload_to_pdf_bytes(upload_stream, extension):
         copy_stream_to_path(upload_stream, input_path)
         if extension == ".pdf":
             return read_file_bytes(input_path)
-        convert_file(input_path, output_path)
+        # Run the blocking conversion off the event loop so the concurrency
+        # limiter can actually allow parallel conversions.
+        await run_in_threadpool(convert_file, input_path, output_path)
         if not file_has_content(output_path):
             raise RuntimeError("Conversion failed")
         return read_file_bytes(output_path)
@@ -91,7 +94,7 @@ async def convert_endpoint(
     original_name = selected_file.filename or "upload.pptx"
     try:
         extension = _validate_extension(original_name)
-        pdf_bytes = _convert_upload_to_pdf_bytes(selected_file.file, extension)
+        pdf_bytes = await _convert_upload_to_pdf_bytes(selected_file.file, extension)
     except HTTPException:
         raise
     except Exception as exc:
