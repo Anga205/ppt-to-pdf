@@ -71,6 +71,64 @@ def run_full_recovery(input_path: Path, pdf_path: Path) -> RecoveryReport:
             except Exception as exc:
                 report.errors.append(f"Conversion after python-pptx repair failed: {exc}")
 
+        # Stage 5: Progressive isolation (remove embedded objects / broken media)
+        report.attempted_strategies.append("progressive_isolation")
+        isolated_path = work_dir / "isolated.pptx"
+        try:
+            from app.recovery.isolation import progressive_isolation
+            if progressive_isolation(input_path, isolated_path):
+                report.repaired_components.append("embedded_objects_removed")
+                try:
+                    from app.services.conversion_service import convert_with_libreoffice
+                    if convert_with_libreoffice(isolated_path, pdf_path):
+                        report.successful_strategy = "progressive_isolation"
+                        report.engine_used = "libreoffice"
+                        report.final_pdf_path = pdf_path
+                        report.final_pdf_size = pdf_path.stat().st_size
+                        return report
+                except Exception as exc:
+                    report.errors.append(f"Conversion after isolation failed: {exc}")
+        except Exception as exc:
+            report.errors.append(f"Progressive isolation failed: {exc}")
+
+        # Stage 6: Slide isolation (binary-search / divide-and-conquer)
+        report.attempted_strategies.append("slide_isolation")
+        try:
+            from app.recovery.slide_isolation import isolate_and_convert_slides
+            slide_pdf = work_dir / "slides.pdf"
+            if isolate_and_convert_slides(input_path, slide_pdf, work_dir):
+                import shutil
+                shutil.copy2(str(slide_pdf), str(pdf_path))
+                report.successful_strategy = "slide_isolation"
+                report.engine_used = "slide_isolation"
+                report.final_pdf_path = pdf_path
+                report.final_pdf_size = pdf_path.stat().st_size
+                try:
+                    from pypdf import PdfReader
+                    report.slides_recovered = len(PdfReader(str(pdf_path)).pages)
+                except Exception:
+                    report.slides_recovered = 0
+                return report
+        except Exception as exc:
+            report.errors.append(f"Slide isolation failed: {exc}")
+
+        # Stage 7: Slide reconstruction (for badly damaged slides)
+        report.attempted_strategies.append("slide_reconstruction")
+        try:
+            from app.recovery.slide_reconstruct import reconstruct_slides_to_pdf
+            recon_pdf = work_dir / "reconstructed.pdf"
+            if reconstruct_slides_to_pdf(input_path, recon_pdf):
+                import shutil
+                shutil.copy2(str(recon_pdf), str(pdf_path))
+                report.successful_strategy = "slide_reconstruction"
+                report.engine_used = "reconstructed"
+                report.reconstructed = True
+                report.final_pdf_path = pdf_path
+                report.final_pdf_size = pdf_path.stat().st_size
+                return report
+        except Exception as exc:
+            report.errors.append(f"Slide reconstruction failed: {exc}")
+
         # Stage 8: Legacy OLE deep repair
         if input_path.suffix.lower() == ".ppt":
             report.attempted_strategies.append("ole_inspection")
