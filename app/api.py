@@ -5,8 +5,7 @@ from typing import Optional
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 
-from fastapi.responses import FileResponse, StreamingResponse
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from starlette.concurrency import run_in_threadpool
 
 from app.constants import ALLOWED_EXTENSIONS
@@ -18,24 +17,6 @@ from app.utils.file_ops import copy_stream_to_path, file_has_content, read_file_
 configure_logging()
 
 app = FastAPI(title="PPT/PPTX to PDF Converter")
-
-# Enable CORS for all origins
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-def _frontend_path():
-    return Path(__file__).resolve().parent / "static" / "index.html"
-
-
-def _logo_path():
-    return Path(__file__).resolve().parent / "static" / "anga.svg"
-
 
 def _validate_extension(filename):
     extension = Path(filename).suffix.lower()
@@ -73,16 +54,6 @@ async def _convert_upload_to_pdf_bytes(upload_stream, extension):
         if not file_has_content(output_path):
             raise RuntimeError("Conversion failed")
         return read_file_bytes(output_path)
-
-
-@app.get("/")
-def root():
-    return FileResponse(_frontend_path(), media_type="text/html")
-
-
-@app.get("/anga.svg")
-def logo():
-    return FileResponse(_logo_path(), media_type="image/svg+xml")
 
 
 @app.post("/convert")

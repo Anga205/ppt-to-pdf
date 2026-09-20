@@ -24,14 +24,6 @@ def _fake_convert_file(_input_path, output_path):
     _write_fake_pdf(output_path)
 
 
-def test_root_endpoint():
-    response = client.get("/")
-    assert response.status_code == 200
-    assert response.headers["content-type"].startswith("text/html")
-    assert "PPT to PDF API Wrapper" in response.text
-    assert "Open Swagger UI Docs" in response.text
-
-
 def test_health_removed():
     response = client.get("/health")
     assert response.status_code == 404
