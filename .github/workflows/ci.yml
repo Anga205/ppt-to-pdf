@@ -22,7 +22,7 @@ jobs:
       - name: Install system deps (LibreOffice)
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libreoffice libreoffice-impress fonts-dejavu
+          sudo apt-get install -y --no-install-recommends libreoffice libreoffice-impress libreoffice-writer fonts-dejavu
 
       - name: Install Python deps
         run: |
@@ -41,6 +41,10 @@ jobs:
         env:
           CONCURRENT_CONVERSIONS: "4"
         run: python -m pytest tests/test_concurrency.py -v
+      - name: Run document conversion tests
+        env:
+          CONCURRENT_CONVERSIONS: "1"
+        run: python -m pytest tests/test_document.py -v
 
   integration:
     runs-on: ubuntu-latest
@@ -60,7 +64,7 @@ jobs:
       - name: Install system deps (LibreOffice)
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libreoffice libreoffice-impress fonts-dejavu
+          sudo apt-get install -y --no-install-recommends libreoffice libreoffice-impress libreoffice-writer fonts-dejavu
 
       - name: Install Python deps
         run: |

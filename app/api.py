@@ -8,9 +8,10 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from starlette.concurrency import run_in_threadpool
 
-from app.constants import ALLOWED_EXTENSIONS
+from app.constants import ALLOWED_EXTENSIONS, DOCUMENT_ALLOWED_EXTENSIONS
 from app.logging_config import configure_logging
 from app.services.conversion_service import convert_file
+from app.services.document_service import convert_document_file
 from app.utils.file_ops import copy_stream_to_path, file_has_content, read_file_bytes
 
 
@@ -22,6 +23,13 @@ def _validate_extension(filename):
     extension = Path(filename).suffix.lower()
     if extension not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail="Only .ppt, .pptx, and .pdf files are supported")
+    return extension
+
+
+def _validate_document_extension(filename):
+    extension = Path(filename).suffix.lower()
+    if extension not in DOCUMENT_ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="Unsupported document format")
     return extension
 
 
@@ -56,8 +64,20 @@ async def _convert_upload_to_pdf_bytes(upload_stream, extension):
         return read_file_bytes(output_path)
 
 
-@app.post("/convert")
-async def convert_endpoint(
+async def _convert_document_upload_to_pdf_bytes(upload_stream, extension):
+    with tempfile.TemporaryDirectory() as temp_dir_name:
+        temp_dir = Path(temp_dir_name)
+        input_path = temp_dir / f"input{extension}"
+        output_path = temp_dir / "output.pdf"
+        copy_stream_to_path(upload_stream, input_path)
+        await run_in_threadpool(convert_document_file, input_path, output_path)
+        if not file_has_content(output_path):
+            raise RuntimeError("Document conversion failed")
+        return read_file_bytes(output_path)
+
+
+@app.post("/convert/ppt")
+async def convert_ppt_endpoint(
     file: Optional[UploadFile] = File(default=None),
     upload: Optional[UploadFile] = File(default=None),
 ):
@@ -74,5 +94,26 @@ async def convert_endpoint(
     finally:
         await selected_file.close()
 
+    headers = _build_response_headers(original_name)
+    return StreamingResponse(iter([pdf_bytes]), media_type="application/pdf", headers=headers)
+
+
+@app.post("/convert/doc")
+async def convert_doc_endpoint(
+    file: Optional[UploadFile] = File(default=None),
+    upload: Optional[UploadFile] = File(default=None),
+):
+    selected_file = _pick_upload(file, upload)
+    original_name = selected_file.filename or "upload.docx"
+    try:
+        extension = _validate_document_extension(original_name)
+        pdf_bytes = await _convert_document_upload_to_pdf_bytes(selected_file.file, extension)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logging.error("Unhandled document conversion error: %s", exc)
+        raise HTTPException(status_code=500, detail="Document conversion failed") from exc
+    finally:
+        await selected_file.close()
     headers = _build_response_headers(original_name)
     return StreamingResponse(iter([pdf_bytes]), media_type="application/pdf", headers=headers)

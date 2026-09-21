@@ -177,3 +177,20 @@ def convert_with_libreoffice_generic_only(input_path: Path, pdf_path: Path):
             "legacy generic conversion",
             temp_dir,
         )
+
+
+def convert_with_libreoffice_writer(input_path: Path, pdf_path: Path):
+    libreoffice_bin = _find_libreoffice_binary()
+    if not libreoffice_bin:
+        return False
+    with tempfile.TemporaryDirectory() as temp_dir_name:
+        temp_dir = Path(temp_dir_name)
+        return _attempt_pdf_strategy(
+            libreoffice_bin,
+            input_path,
+            pdf_path,
+            "pdf:writer_pdf_Export",
+            temp_dir / "writer-pdf",
+            "writer_pdf_Export",
+            temp_dir,
+        )
