@@ -38,7 +38,7 @@ def test_convert_success_with_file_field(monkeypatch):
             "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         )
     }
-    response = client.post("/convert", files=files)
+    response = client.post("/convert/ppt", files=files)
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("application/pdf")
     assert response.headers["content-disposition"].endswith("slides.pdf\"")
@@ -54,27 +54,27 @@ def test_convert_success_with_upload_alias(monkeypatch):
             "application/vnd.ms-powerpoint",
         )
     }
-    response = client.post("/convert", files=files)
+    response = client.post("/convert/ppt", files=files)
     assert response.status_code == 200
     assert response.content.startswith(b"%PDF")
 
 
 def test_convert_rejects_invalid_extension():
     files = {"file": ("notes.txt", b"not a ppt", "text/plain")}
-    response = client.post("/convert", files=files)
+    response = client.post("/convert/ppt", files=files)
     assert response.status_code == 400
     assert response.json()["detail"] == "Only .ppt, .pptx, and .pdf files are supported"
 
 
 def test_convert_pdf_passthrough():
     files = {"file": ("already.pdf", b"%PDF-1.4\nfake\n%%EOF\n", "application/pdf")}
-    response = client.post("/convert", files=files)
+    response = client.post("/convert/ppt", files=files)
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("application/pdf")
     assert response.content.startswith(b"%PDF")
 
 
 def test_convert_missing_upload_returns_400():
-    response = client.post("/convert")
+    response = client.post("/convert/ppt")
     assert response.status_code == 400
     assert "Missing upload" in response.json()["detail"]

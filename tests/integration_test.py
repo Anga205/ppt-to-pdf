@@ -42,7 +42,7 @@ def post_convert(url, file_path):
         f"Content-Type: application/octet-stream\r\n\r\n"
     ).encode() + data + f"\r\n--{boundary}--\r\n".encode()
     req = urllib.request.Request(
-        url + "/convert",
+        url + "/convert/ppt",
         data=body,
         headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
         method="POST",
